@@ -138,6 +138,7 @@ class ArchivalTests(unittest.TestCase):
         svg = b'<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200"><path id="line" d="M20,80 L40,80M40,80 L60,80" stroke="none"/><text font-family="sans-serif" font-size="30"><textPath href="#line" startOffset="20" textLength="20">B</textPath></text></svg>'
         prepared = prepare_svg(svg,self.directory/'fonts')
         self.assertNotIn(b'<textPath',prepared)
+        self.assertNotIn(b'<textPath',prepare_svg(svg.replace(b'textLength="20"',b'textLength="auto"'),self.directory/'fonts'))
         output = cairosvg.svg2pdf(bytestring=prepared)
         with pymupdf.open(stream=output,filetype='pdf') as doc:
             self.assertIn('B',doc[0].get_text())

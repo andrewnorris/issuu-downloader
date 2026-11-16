@@ -4,9 +4,11 @@ import hashlib
 import json
 import math
 import random
+import re
 from pathlib import Path
 
 import pymupdf
+from lxml import etree
 
 
 def verify(path, manifest, render_dir=None):
@@ -42,6 +44,17 @@ def verify(path, manifest, render_dir=None):
                         report['errors'].append(f'Page {i+1}: aspect ratio mismatch')
                 text = page.get_text().strip()
                 report['extractable_text_pages'] += bool(text)
+                source_characters = None
+                if entry and entry.get('svg_path') and Path(entry['svg_path']).exists():
+                    svg_path = Path(entry['svg_path'])
+                    if hashlib.sha256(svg_path.read_bytes()).hexdigest() != entry['sha256']:
+                        report['errors'].append(f'Page {i+1}: source SVG checksum mismatch')
+                    root = etree.fromstring(svg_path.read_bytes(),etree.XMLParser(resolve_entities=False,no_network=True))
+                    source_text = ''.join(''.join(e.itertext()).strip() for e in root.iter('{http://www.w3.org/2000/svg}text'))
+                    source_text = re.sub(r'\s+','',source_text)
+                    source_characters = len(source_text)
+                    if source_text and source_text != re.sub(r'\s+','',text):
+                        report['errors'].append(f'Page {i+1}: extracted text differs from source SVG; inspect for clipped or missing characters')
                 # Low-resolution raster fingerprints include images and resources,
                 # so order verification detects swapped pages with identical sizes.
                 scale = min(1, 180/max(width,height))
@@ -62,6 +75,7 @@ def verify(path, manifest, render_dir=None):
                                 report['errors'].append(f'Page {i+1}: content/order fingerprint mismatch')
                 report['pages'].append({'page': i+1, 'width_pt': width, 'height_pt': height,
                                         'text_characters': len(text), 'warnings': warnings,
+                                        'source_text_characters_without_spaces': source_characters,
                                         'render_sha256': fingerprint})
                 if render_dir and (i in samples or warnings):
                     directory = Path(render_dir)

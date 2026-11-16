@@ -41,7 +41,7 @@ straight-path offsets and declared lengths. Original JPEG streams are restored o
 when their Pillow-decoded RGB pixels exactly match the Cairo image resource.
 Complex unsupported text paths fail rather than silently producing bad layout.
 
-The verifier checks all page dimensions, page count, encryption, source PDF hashes,
+The verifier checks all page dimensions, page count, encryption, source PDF hashes, source-SVG text completeness,
 rendered fingerprints for every page (content/order), extractable text, and nearly
 uniform pages. First/middle/last and four seeded random pages are rendered for
 visual inspection. Raster fingerprints check merge fidelity, not source typography;
@@ -60,4 +60,27 @@ resume without duplicated pages, numeric order, dimensions, text extraction, mis
 pages, original JPEG byte preservation, viewer cache busters, and path-end clipping.
 Only Linux was executed. macOS/Windows setup guidance is unverified here.
 
-Final X25 export results are recorded below after the full verification run.
+## Final X25 result
+
+- Execution completed November 15, 2026 (America/New_York).
+- Expected/exported: **116 / 116 pages**, in metadata order.
+- Output: `output/x25_high_quality.pdf`, **103,844,331 bytes** (about 104 MB).
+- Extractable/selectable text: **112 pages**. The four image-only pages have no
+  extractable source text; no OCR or invented text layer was added.
+- All source SVG text sequences match PDF-extracted sequences after whitespace
+  normalization, including page numbers and text at the ends of source paths.
+- All page media boxes: **1735.5 × 2242.5 pt**, corresponding to the source SVG
+  viewBox of 2314 × 2990 CSS pixels at 96 DPI. These are SVG-derived dimensions,
+  not a claim about the publisher's original print master. Aspect ratio agrees
+  with reader metadata within 1% (652 × 842 viewer units).
+- Original JPEG stream bytes retained for all 116 page background images.
+- Automated result: **passed**, no errors or nearly uniform-page warnings.
+- Visual inspection: pages 1, 2, 3, 41, 43, 49, 59, 99, 108, 114 and 116.
+  Checked covers, dense text, angled baselines, page numbers and copyright text.
+- Eleven offline tests passed. The final CLI completed with `--keep-cache
+  --delay 2 --verify`; a second resume attempt reused validated source/page assets.
+- Final PDF SHA-256:
+  `9a6aad4d92e5c13a228955dc7d9fdaeeb5e726c39c9c4402bb8355c40b0d7486`.
+
+The exported PDF, validation JSON and manifest are delivered separately. Source
+publication assets and output PDFs are not committed to this public repository.

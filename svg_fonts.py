@@ -106,7 +106,8 @@ def prepare_svg(data, font_directory):
         context.select_font_face(family)
         context.set_font_size(float(text.get('font-size','12')))
         advance = context.text_extents(word)[4]
-        width = float(child.get('textLength',text.get('textLength',str(advance))))
+        declared_width = child.get('textLength',text.get('textLength',str(advance)))
+        width = advance if declared_width == 'auto' else float(declared_width)
         scale = width/advance if advance > 0 else 1
         transform = text.get('transform','')
         text.set('transform',f'{transform} translate({x},{y}) rotate({angle}) scale({scale},1)')
